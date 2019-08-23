@@ -103,7 +103,7 @@ def calculateYBus(zones):
     Voltagelevel = [380, 225, 225, 10.5, 110]
 
     # we will define a S base for the whole system, which will be equal to 100 MVA
-    S_base = 100
+    S_base = 1000
 
     # Then we will proceed to calculate the base impedance as well as the base admittance
     Z_base = []

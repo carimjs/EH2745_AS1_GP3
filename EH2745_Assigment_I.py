@@ -15,8 +15,6 @@ from PowerTransformerEnd import PowerTransformerEnd
 from RatioTapChanger import RatioTapChanger
 from lxml import etree
 from pathlib import Path
-from pprint import pprint
-from GraphPowerGrid import GraphMyPoweGrid
 from CalculateYBusMatrix import CalculateYBusMatrix
 
 
@@ -389,11 +387,16 @@ def topologyGenerator(rootXML, rootSSH, baseVoltageList, substationList, voltage
         nodeNumber += 1
 
     # GraphMyPowerGrid
-    CalculateYBusMatrix(powerGrid, voltageLevelList, busbarSectionList, powerTransformerEndList, powerTransformerList,
-                        baseVoltageList, ACLinesList)
+    yBusMtx = CalculateYBusMatrix(voltageLevelList, busbarSectionList, powerTransformerEndList, powerTransformerList,
+                        baseVoltageList, ACLinesList, energyConsumerList)
 
-    print('The power grid topology is: ')
-    print(powerGrid)
+    for element in yBusMtx:
+        if element != 0:
+            print(element)
+
+    print()
+    print("All other elements are cero")
+
 
 # Initialize variables to be used ("in memory")
 

@@ -1,8 +1,9 @@
 from Zones import Zones
 
 
-def CalculateYBusMatrix(powerGrid, voltageLevelList, busbarSectionList, powerTransformerEndList, powerTransformerList,
-                        baseVoltageList, ACLinesList):
+def CalculateYBusMatrix(voltageLevelList, busbarSectionList, powerTransformerEndList, powerTransformerList,
+                        baseVoltageList, ACLinesList, energyConsumerList):
+
     # First, we look for the Busbar sections
 
     zonesList = []
@@ -43,6 +44,7 @@ def CalculateYBusMatrix(powerGrid, voltageLevelList, busbarSectionList, powerTra
                                         for _ in ACLinesList:
                                             if ACLinesList[posLine].baseVLine[1:] == baseVoltageList[posBL].IDBaseV:
                                                 actualLine = ACLinesList[posLine]
+                                                tr = energyConsumerList[posLine].tR
                                             posLine += 1
 
                                         zonesList.append(Zones(busbarSectionList[posBB], voltageLevelList[posVL],
@@ -57,6 +59,8 @@ def CalculateYBusMatrix(powerGrid, voltageLevelList, busbarSectionList, powerTra
         posBB += 1
 
     reduceZones(zonesList)
+    return tr
+    #return reduceZones(zonesList)
     # calculateYBus(zonesList)
 
 """
@@ -67,7 +71,6 @@ Please note this function is done after the grid topology is built.
 """
 
 def reduceZones(zonesList):
-    tempZones = zonesList.copy()
     newZones = []
 
     for zone in zonesList:
@@ -77,26 +80,14 @@ def reduceZones(zonesList):
                     newZones.remove(newZ)
         newZones.append(zone)
 
-    calculateYBus(newZones)
+    return calculateYBus(newZones)
 
 
 def calculateYBus(zones):
     line = 1
-    rL = 0
-    xL = 0
-    gL = 0
-    bL = 0
-    rT = 0
-    xT = 0
-
-    Zline = 0
-    Yline = 0
-    Ztrafo = 0
-
-    Y_outdiag = 0
     i = 0
     j = 0
-    Y_ = 0
+    yBusMtx = []
 
     # we will extract the voltage of every bus bar section
     # the following list includes the voltages of each bus bar
@@ -153,13 +144,10 @@ def calculateYBus(zones):
                     else:
                         Ylast = Y_
 
-                    print('Element Y' + str(i) + str(j) + ' is a Diagonal element' + ' = ' + str(Y_))
-
+                    yBusMtx.append(str('Y' + str(i) + str(j)) + ' = ' + str(Y_))
 
                 except ZeroDivisionError:
                     pass
-
-
 
             else:
                 if zoneA.ACLines:
@@ -168,19 +156,16 @@ def calculateYBus(zones):
 
                             rL = float(zoneA.ACLines.rLine)
                             xL = float(zoneA.ACLines.xLine)
-                            gL = float(zoneA.ACLines.gLine)
-                            bL = float(zoneA.ACLines.bLine)
                             line = 0
 
-                            Zline = complex(rL, xL);
+                            Zline = complex(rL, xL)
 
                             try:
                                 Y_outdiag = (1 / (Zline / Z_base[i]))
-
-                                print('Element Y' + str(i) + str(j) + " = nonZeroElement" + ' = ' + str(Y_outdiag))
+                                yBusMtx.append(str('Y' + str(i) + str(j)) + ' = ' + str(Y_outdiag))
 
                             except ZeroDivisionError:
-                                print('Element Y' + str(i) + str(j) + ' = 0')
+                                yBusMtx.append(str('Y' + str(i) + str(j)) + ' = 0')
 
                 if zoneA.PT and line:
                     if zoneB.PT:
@@ -188,20 +173,20 @@ def calculateYBus(zones):
                             rT = float(zoneA.pTEnd.rPTEnd)
                             xT = float(zoneA.pTEnd.xPTEnd)
 
-                            Ztrafo = complex(rT, xT);
+                            Ztrafo = complex(rT, xT)
 
                             try:
                                 Y_outdiag = (1 / (Ztrafo / Z_base[i]))
-                                print('Element Y' + str(i) + str(j) + " = nonZeroElement" + ' = ' + str(Y_outdiag))
+                                yBusMtx.append(str('Y' + str(i) + str(j)) + ' = ' + str(Y_outdiag))
 
                             except ZeroDivisionError:
-                                print('Element Y' + str(i) + str(j) + ' = 0')
+                                yBusMtx.append(str('Y' + str(i) + str(j)) + ' = 0')
 
                         else:
-                            print('Element Y' + str(i) + str(j) + " = 0")
+                            yBusMtx.append(str('Y' + str(i) + str(j)) + ' = 0')
             j += 1
             line = 1
         i += 1
         j = 0
-    i = 0
-    j = 0
+
+    return yBusMtx
